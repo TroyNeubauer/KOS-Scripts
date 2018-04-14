@@ -1,3 +1,3 @@
-SET filename TO "ICBM.ks".
+SET filename TO "Fast.ks".
 copypath("0:/" + filename, "1:/" + filename).
-RUN "ICBM.ks".
+RUN "Fast.ks".

@@ -1,3 +1,3 @@
-SET filename TO "MMissile.ks".
+SET filename TO "Cruise Missile.ks".
 copypath("0:/" + filename, "1:/" + filename).
-RUN "MMissile.ks".
+RUN "Cruise Missile.ks".
