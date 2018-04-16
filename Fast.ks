@@ -44,7 +44,7 @@ STAGE.//Get rid of stage one
 wait 0.5.
 print "waiting to start turn stage ".
 
-UNTIL ALTITUDE > 38990 {
+UNTIL ALTITUDE > 39000 {
 	WAIT 0.001.
 }
 
@@ -54,7 +54,7 @@ RCS ON.
 LOCK STEERING TO HEADING(0, -90).
 
 wait 0.5.
-UNTIL ALTITUDE > 50750 {
+UNTIL ALTITUDE > 51000 {
 	WAIT 0.1.
 }
 
@@ -86,8 +86,8 @@ LOCK STEERING to SRFPROGRADE.
 
 LOCK THROTTLE TO 1.0.
 
-print "Waiting to fire last stages at 4800m".
-until ALT:RADAR < 4800 {
+print "Waiting to fire last stages at 7000m".
+until ALT:RADAR < 7000 {
 	wait 0.1.
 }
 SET interStageWaitTime TO 0.3.
