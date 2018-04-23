@@ -1,0 +1,20 @@
+LOCK P TO SHIP:BODY:ATM:ALTITUDEPRESSURE(ALTITUDE).
+LOCK Q TO 0.5 * P * AIRSPEED.
+
+WAIT 1.0.
+
+SAS OFF.
+RCS OFF.
+LIGHTS OFF.
+
+LOCK STEERING TO HEADING(90, 0).
+LOCK THROTTLE TO 1.0.
+
+STAGE.
+
+until false {
+	print "Dynamic Pressure: " + Q at(0, 10).
+	wait 0.1.
+}
+
+
