@@ -42,7 +42,24 @@ FUNCTION distanceFormula {
 	
 }
 
+FUNCTION manhattanDistance {
+	PARAMETER x1.
+	PARAMETER y1.
+	PARAMETER x2.
+	PARAMETER y2.
+	RETURN abs(x2 - x1) + abs(y2 - y1).
+	
+}
 
-
-
-
+FUNCTION clamp {
+    PARAMETER min.
+	PARAMETER max.
+	PARAMETER value.
+	
+    if (value < min)
+        SET value TO min.
+    else if (value > max)
+        SET value TO max.
+    
+    RETURN value.
+}

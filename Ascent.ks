@@ -26,15 +26,23 @@ function executeAscent {
 		} else {
 			SET pitch TO map(altutudes[stepNum - 1], altutudes[stepNum], myAlt, angles[stepNum - 1], angles[stepNum]).
 		}
-		print "pitch " + pitch at(0, 8).
 		SET pitch to 90 - pitch.
 		SET heading TO desiredHeading.
-		if(maxAngle <> 0) {
-			SET progradeHeading TO headingOfVector(SHIP:PROGRADE:FOREVECTOR).
-			SET progradePitch TO pitchOfVector(SHIP:PROGRADE:FOREVECTOR).
-			SET navballDistance TO distanceFormula(progradeHeading, progradePitch, heading, pitch).
-			print "Distance off by " + navballDistance at(0,7).
+		
+		SET progradeHeading TO headingOfVector(SHIP:SRFPROGRADE:FOREVECTOR).
+		SET progradePitch TO pitchOfVector(SHIP:SRFPROGRADE:FOREVECTOR).
+		SET shipHeading TO headingOfVector(SHIP:FACING:FOREVECTOR).
+		SET shipPitch TO pitchOfVector(SHIP:FACING:FOREVECTOR).
+		SET navballDistance TO abs(shipPitch - progradePitch).
+		
+		if(maxAngle <> 0 AND navballDistance > maxAngle) {
+			SET pitch TO clamp(shipPitch - maxAngle, shipPitch + maxAngle, pitch).
 		}
+		
+		print "actual:   " + shipHeading + 		", " + shipPitch at(0,2).
+		print "desired:  " + heading + 			", " + pitch at(0,3).
+		print "prograde: " + progradeHeading + 	", " + progradePitch at(0,4).
+		print "Distance off by " + navballDistance + " degrees" at(0,5).
 		
 		SET STEERING TO HEADING(heading, pitch).
 		until stepNum = steps OR myAlt < altutudes[stepNum] {//Advance to the next step as we ascend

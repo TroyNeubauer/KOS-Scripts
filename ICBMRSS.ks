@@ -1,5 +1,5 @@
 CLEARSCREEN.
-require("Vectors").
+require("Vector").
 require("Ascent").
 require("Ascent").
 
@@ -46,9 +46,9 @@ STAGE.
 until AIRSPEED > 50.
 CLEARSCREEN.
 
-SET ascent TO LIST(LIST(200, 1000, 3000, 5000, 10000, 15000, 25000, 40000, 50000, 55000), LIST(0, 2, 5, 10, 25, 40, 60, 70, 80, 86)).
+SET ascent TO LIST(LIST(200, 1000, 3000, 5000, 10000, 15000, 25000, 40000, 50000, 60000), LIST(0, 1, 3, 5, 7, 12, 18, 25, 50, 87)).
 
-executeAscent(ascent, TRUE, 90, 5).
+executeAscent(ascent, TRUE, 90, 1).
 
 
 LIST ENGINES IN elist.
