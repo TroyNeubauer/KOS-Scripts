@@ -32,3 +32,17 @@ FUNCTION map {
 	SET n TO normalize(sourceMin, sourceMax, value).
 	RETURN lerp(destMin, destMax, n).
 }
+
+FUNCTION distanceFormula {
+	PARAMETER x1.
+	PARAMETER y1.
+	PARAMETER x2.
+	PARAMETER y2.
+	RETURN sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).
+	
+}
+
+
+
+
+

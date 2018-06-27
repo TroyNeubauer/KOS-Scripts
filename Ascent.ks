@@ -1,9 +1,11 @@
 require("Math").
+require("Vector").
 
 function executeAscent {
 	PARAMETER ascent.
 	PARAMETER autoStage.
 	PARAMETER desiredHeading.
+	PARAMETER maxAngle.
 	
 	declare local altutudes TO ascent[0].
 	declare local angles TO ascent[1].
@@ -25,7 +27,16 @@ function executeAscent {
 			SET pitch TO map(altutudes[stepNum - 1], altutudes[stepNum], myAlt, angles[stepNum - 1], angles[stepNum]).
 		}
 		print "pitch " + pitch at(0, 8).
-		SET STEERING TO HEADING(desiredHeading, pitch).
+		SET pitch to 90 - pitch.
+		SET heading TO desiredHeading.
+		if(maxAngle <> 0) {
+			SET progradeHeading TO headingOfVector(SHIP:PROGRADE:FOREVECTOR).
+			SET progradePitch TO pitchOfVector(SHIP:PROGRADE:FOREVECTOR).
+			SET navballDistance TO distanceFormula(progradeHeading, progradePitch, heading, pitch).
+			print "Distance off by " + navballDistance at(0,7).
+		}
+		
+		SET STEERING TO HEADING(heading, pitch).
 		until stepNum = steps OR myAlt < altutudes[stepNum] {//Advance to the next step as we ascend
 			SET stepNum TO stepNum + 1.
 			print "going to next step!".

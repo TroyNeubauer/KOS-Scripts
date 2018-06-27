@@ -48,7 +48,7 @@ CLEARSCREEN.
 
 SET ascent TO LIST(LIST(200, 1000, 3000, 5000, 10000, 15000, 25000, 40000, 50000, 55000), LIST(0, 2, 5, 10, 25, 40, 60, 70, 80, 86)).
 
-executeAscent(ascent, TRUE, 90).
+executeAscent(ascent, TRUE, 90, 5).
 
 
 LIST ENGINES IN elist.
