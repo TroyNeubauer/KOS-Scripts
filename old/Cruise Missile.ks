@@ -1,13 +1,3 @@
-//use to find the distance from...
-function circle_distance {
-	parameter
-	p1,     //...this point...
-	p2,     //...to this point...
-	radius. //...around a body of this radius.
-	local A is sin((p1:lat-p2:lat)/2)^2 + cos(p1:lat)*cos(p2:lat)*sin((p1:lng-p2:lng)/2)^2.
-	return radius*constant():PI*arctan2(sqrt(A),sqrt(1-A))/90.
-}.
-
 
 
 //#################### Function Library Complete. Begin Missile Code ####################

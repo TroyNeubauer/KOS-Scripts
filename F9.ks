@@ -1,0 +1,20 @@
+
+
+LOCK STEERING TO HEADING(HEADING, 90).
+
+SAS OFF.
+LIGHTS OFF.
+RCS OFF.
+SET THROTTLE TO 1.0.
+
+STAGE.
+wait 2.0.
+STAGE.
+
+until false {
+	CLEARSCREEN.
+	print "Test ".
+	print "Thrust " + SHIP:AVAILABLETHRUST.//kN
+	print "Accel  " + (SHIP:AVAILABLETHRUST / SHIP:MASS).
+	wait 0.05.
+}
