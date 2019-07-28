@@ -1,28 +1,60 @@
 
+//Calculates the solution to the quadratic equation ax^2+bx+c
+//and returns any real anwsers as a list
+//If there are two solutions, the smaller one is placed first
+function Quadratic { parameter a, b, c.
+	SET discrim TO b*b - 4*a*c.
+	IF discrim < 0.0 { return LIST(). } //No real solutions
 
-function circle_distance {
-	parameter
-	p1,     //...this point...
-	p2,     //...to this point...
-	radius. //...around a body of this radius.
+	SET right TO sqrt(discrim).
+	
+	SET solA TO (-b + right) / (2 * a).
+	SET solB TO (-b - right) / (2 * a).
+	IF solA = solB {//Both solutions are the same
+		return LIST(solA).
+	} ELSE {
+		IF solA < solB {
+			return LIST(solA, solB).
+		} ELSE {
+			return LIST(solB, solA).
+		}
+	}
+}
+
+//Calculates the solution to the quadratic equation ax^2+bx+c
+//Returning only non-negitive anwsers
+function QuadraticPos { parameter a, b, c.
+	SET quad TO Quadratic(a, b, c).
+	SET result TO LIST().
+	FOR element IN quad {
+		IF element >= 0.0 { result:ADD(element). }
+	}
+	return result.
+}
+
+function GetComponent { parameter vector, axis.
+	return vector:MAG * vdot(vector:NORMALIZED, axis:NORMALIZED).
+}
+
+//p1 this point...
+//p2 to this point...
+//radius around a body of this radius.
+function circle_distance { parameter p1, p2, radius.
 	local A is sin((p1:lat-p2:lat)/2)^2 + cos(p1:lat)*cos(p2:lat)*sin((p1:lng-p2:lng)/2)^2.
 	return radius*constant():PI*arctan2(sqrt(A),sqrt(1-A))/90.
 }.
 
 // Display a message
-FUNCTION notify {
-  PARAMETER message.
-  HUDTEXT("kOS: " + message, 3, 2, 50, YELLOW, false).
+FUNCTION Notify { parameter message.
+	HUDTEXT(message, 3, 2, 50, YELLOW, false).
 }
 
 // Put a file on KSC
-FUNCTION upload {
-	PARAMETER name.
+FUNCTION Upload { parameter name.
 	COPYPATH("1:/" + name, "0:/" + name).
 }
 
-FUNCTION download {
-	PARAMETER name.
+FUNCTION Download { parameter name.
 	if(NOT EXISTS("0:/" + name)) {
 		print "Cannot download non existant file! = " + name.
 	}
@@ -31,8 +63,7 @@ FUNCTION download {
 }
 
 
-FUNCTION require {
-	PARAMETER name.
+FUNCTION Require { parameter name.
 	if(EXISTS("1:/" + name)) {
 		print "already downloaded file = " + name.
 		return.
@@ -42,63 +73,35 @@ FUNCTION require {
 	print "running " + name.
 }
 
-FUNCTION ish {
-	PARAMETER center.
-	PARAMETER offset.
-	PARAMETER value.
-	RETURN value > center - offset AND value < center + offset.
-}
-
-FUNCTION lerp {
-	PARAMETER a.
-	PARAMETER b.
-	PARAMETER f.
+FUNCTION lerp { parameter a, b, f.
 	RETURN a + f * (b - a).
 }
 
 
-FUNCTION normalize {
-	PARAMETER min.
-	PARAMETER max.
-	PARAMETER value.
+FUNCTION normalize { parameter min, max, value.
 
 	RETURN (value - min) / (max - min).
 }
 
 
-FUNCTION map {
-	PARAMETER sourceMin.
-	PARAMETER sourceMax.
-	PARAMETER value.
-	PARAMETER destMin.
-	PARAMETER destMax.
+FUNCTION map { parameter sourceMin, sourceMax, value, destMin, destMax.
 	
 	SET n TO normalize(sourceMin, sourceMax, value).
 	RETURN lerp(destMin, destMax, n).
 }
 
-FUNCTION distanceFormula {
-	PARAMETER x1.
-	PARAMETER y1.
-	PARAMETER x2.
-	PARAMETER y2.
+FUNCTION distanceFormula { parameter x1, y1, x2, y2.
 	RETURN sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).
 	
 }
 
-FUNCTION manhattanDistance {
-	PARAMETER x1.
-	PARAMETER y1.
-	PARAMETER x2.
-	PARAMETER y2.
+FUNCTION manhattanDistance { parameter x1, y1, x2, y2.
 	RETURN abs(x2 - x1) + abs(y2 - y1).
 	
 }
 
 FUNCTION clamp {
-    PARAMETER min.
-	PARAMETER max.
-	PARAMETER value.
+    parameter min, max, value.
 	
     if (value < min)
         SET value TO min.
@@ -109,7 +112,7 @@ FUNCTION clamp {
 }
 
 FUNCTION headingOfVector { // heading_of_vector returns the heading of the vector relative to the ship (number renge   0 to 360)
-	PARAMETER vecT.
+	parameter vecT.
 
 	LOCAL east IS VCRS(SHIP:UP:VECTOR, SHIP:NORTH:VECTOR).
 
@@ -122,7 +125,7 @@ FUNCTION headingOfVector { // heading_of_vector returns the heading of the vecto
 }
 
 FUNCTION pitchOfVector { // pitch_of_vector returns the pitch of the vector relative to the ship (number range -90 to  90)
-	PARAMETER vecT.
+	parameter vecT.
 
 	RETURN 90 - VANG(SHIP:UP:VECTOR, vecT).
 }
