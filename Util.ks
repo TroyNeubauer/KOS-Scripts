@@ -36,6 +36,49 @@ function GetComponent { parameter vector, axis.
 	return vector:MAG * vdot(vector:NORMALIZED, axis:NORMALIZED).
 }
 
+//Standard XOR function
+function XOR { parameter a, b.
+	IF NOT a AND NOT b { return false. }
+	IF NOT a AND     b { return true.  }
+	IF     a AND NOT b { return true.  }
+	IF     a AND     b { return false. }
+}
+
+
+function BinarySearch { parameter func, startX, deltaX, goal, iterations, printing.
+	SET last TO func:call(startX).
+	SET x TO startX + deltaX.
+	SET reverse TO x < 0.0.
+	until false {
+		SET now TO func:call(x).
+		IF (last > 0 AND now < 0) OR (last < 0 AND now > 0) {
+			SET left TO x - deltaX.
+			SET right TO x.
+			IF printing {
+				print "left: func(" + left + ") = " + last.
+				print "right: func(" + right + ") = " + now.
+			}
+			BREAK.
+		}
+		SET last TO now.
+		SET x TO x + deltaX.
+	}
+
+	until iterations <= 0 {
+
+		SET center TO (right + left) / 2.
+		SET new TO func:call(center).
+		
+		IF XOR(new > 0.0, reverse) { SET left TO center. }//The function is decreasing and the center is still too early
+		ELSE { SET right TO center. }
+		IF printing {
+			print "func(" + center + ") = " + new.
+			print "new Left: " + left.
+			print "new Right: " + right.
+		}
+		SET iterations TO iterations - 1.
+    } 
+}
 //p1 this point...
 //p2 to this point...
 //radius around a body of this radius.
@@ -45,16 +88,16 @@ function circle_distance { parameter p1, p2, radius.
 }.
 
 // Display a message
-FUNCTION Notify { parameter message.
+function Notify { parameter message.
 	HUDTEXT(message, 3, 2, 50, YELLOW, false).
 }
 
 // Put a file on KSC
-FUNCTION Upload { parameter name.
+function Upload { parameter name.
 	COPYPATH("1:/" + name, "0:/" + name).
 }
 
-FUNCTION Download { parameter name.
+function Download { parameter name.
 	if(NOT EXISTS("0:/" + name)) {
 		print "Cannot download non existant file! = " + name.
 	}
@@ -63,7 +106,7 @@ FUNCTION Download { parameter name.
 }
 
 
-FUNCTION Require { parameter name.
+function Require { parameter name.
 	if(EXISTS("1:/" + name)) {
 		print "already downloaded file = " + name.
 		return.
@@ -73,34 +116,34 @@ FUNCTION Require { parameter name.
 	print "running " + name.
 }
 
-FUNCTION lerp { parameter a, b, f.
+function Lerp { parameter a, b, f.
 	RETURN a + f * (b - a).
 }
 
 
-FUNCTION normalize { parameter min, max, value.
+function Normalize { parameter min, max, value.
 
 	RETURN (value - min) / (max - min).
 }
 
 
-FUNCTION map { parameter sourceMin, sourceMax, value, destMin, destMax.
+function Map { parameter sourceMin, sourceMax, value, destMin, destMax.
 	
 	SET n TO normalize(sourceMin, sourceMax, value).
 	RETURN lerp(destMin, destMax, n).
 }
 
-FUNCTION distanceFormula { parameter x1, y1, x2, y2.
+function DistanceFormula { parameter x1, y1, x2, y2.
 	RETURN sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).
 	
 }
 
-FUNCTION manhattanDistance { parameter x1, y1, x2, y2.
+function ManhattanDistance { parameter x1, y1, x2, y2.
 	RETURN abs(x2 - x1) + abs(y2 - y1).
 	
 }
 
-FUNCTION clamp {
+function Clamp {
     parameter min, max, value.
 	
     if (value < min)
@@ -111,7 +154,7 @@ FUNCTION clamp {
     RETURN value.
 }
 
-FUNCTION headingOfVector { // heading_of_vector returns the heading of the vector relative to the ship (number renge   0 to 360)
+function HeadingOfVector { // heading_of_vector returns the heading of the vector relative to the ship (number renge   0 to 360)
 	parameter vecT.
 
 	LOCAL east IS VCRS(SHIP:UP:VECTOR, SHIP:NORTH:VECTOR).
@@ -124,7 +167,7 @@ FUNCTION headingOfVector { // heading_of_vector returns the heading of the vecto
 	IF result < 0 {RETURN 360 + result.} ELSE {RETURN result.}
 }
 
-FUNCTION pitchOfVector { // pitch_of_vector returns the pitch of the vector relative to the ship (number range -90 to  90)
+function PitchOfVector { // pitch_of_vector returns the pitch of the vector relative to the ship (number range -90 to  90)
 	parameter vecT.
 
 	RETURN 90 - VANG(SHIP:UP:VECTOR, vecT).
