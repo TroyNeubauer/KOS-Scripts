@@ -48,10 +48,10 @@ function XOR { parameter a, b.
 function BinarySearch { parameter func, startX, deltaX, goal, iterations, printing.
 	SET last TO func:call(startX).
 	SET x TO startX + deltaX.
-	SET reverse TO x < 0.0.
+	SET pos TO x < goal.
 	until false {
 		SET now TO func:call(x).
-		IF (last > 0 AND now < 0) OR (last < 0 AND now > 0) {
+		IF (last > goal AND now < goal) OR (last < goal AND now > goal) {
 			SET left TO x - deltaX.
 			SET right TO x.
 			IF printing {
@@ -63,21 +63,27 @@ function BinarySearch { parameter func, startX, deltaX, goal, iterations, printi
 		SET last TO now.
 		SET x TO x + deltaX.
 	}
+	SET center TO (right + left) / 2.
 
 	until iterations <= 0 {
 
 		SET center TO (right + left) / 2.
 		SET new TO func:call(center).
-		
-		IF XOR(new > 0.0, reverse) { SET left TO center. }//The function is decreasing and the center is still too early
-		ELSE { SET right TO center. }
+		IF pos {
+			IF new > goal { SET left TO center. }//The function is decreasing and the center is still too early
+			ELSE { SET right TO center. }
+		} ELSE {
+			IF new > goal { SET right TO center. }//The function is increasing so the right bound is too far
+			ELSE { SET left TO center. }
+		}
 		IF printing {
 			print "func(" + center + ") = " + new.
 			print "new Left: " + left.
 			print "new Right: " + right.
 		}
 		SET iterations TO iterations - 1.
-    } 
+    }
+    return center.
 }
 //p1 this point...
 //p2 to this point...
