@@ -158,8 +158,8 @@ function Y { parameter t.
 }
 
 //The equation that calculates height based off of burn time except solved for force needed
-function GetForce() { parameter t.
-	f = (FR^2 *(G*t^2 - 2*t*VERTICALSPEED )) / (2*(-FR*t*LN(ABS(FR*t - M)) + M*LN(ABS(FR*t - M)) + FR*t * LN(M) + FR*t)).
+function GetForce { parameter t.
+	return (FR^2 *(G*t^2 - 2*t*VERTICALSPEED )) / (2*(-FR*t*LN(ABS(FR*t - M)) + M*LN(ABS(FR*t - M)) + FR*t * LN(M) + FR*t)).
 }
 
 
@@ -210,9 +210,14 @@ function TowerSeperated {
 
 SET printDelta TO 0.0.
 SET lastMass TO SHIP:MASS.
+
 until false {
 	SET now TO MT.
 	SET subUpdates TO subUpdates + 1.
+	IF newMode {
+		SET modeStart TO now.
+	}
+	SET modeTime TO now - modeStart.
 
 	IF now - lastSpeedTime > 0.1 {
 		SET printDelta TO now - lastSpeedTime.
@@ -386,13 +391,17 @@ until false {
 			SET modeName TO "Landing Burn".
 		}
 
+		//No need to change burn calculation variables since they already account for the single engine thats running
+		SET neededForce TO GetForce(burnTime - modeTime).
+		SET THROTTLE TO clamp(0.4, 1.0, neededForce / F * 1000.0).
+
 		//Change variables to calculate what time we would need to start the single engine burn 
 		SET engineCount TO GetActiveEngineCount(GetFirstStageEngines()).
 		SET F TO 1000.0 * GetPotentialThrust(SHIP:PARTSTAGGED("1-5")).//thrust of currently active engines (N)
 		SET FR TO NOMINAL_FUEL_FLOW.//The rate at which fuel burns (kg/s)
 		
-		SET burnTime TO BinarySearch(Vel@, 0.0, 0.1, 0.0, 15, false).
-		SET finalHeight TO Y(burnTime).
+		SET singleBurnTime TO BinarySearch(Vel@, 0.0, 0.1, 0.0, 15, false).
+		SET finalHeight TO Y(singleBurnTime).
 
 		SET STEERING TO SRFRETROGRADE.
 		IF TTImpact < 3 { GEAR ON. }
@@ -405,9 +414,8 @@ until false {
 			SelectEngines(1).
 			SET modeName TO "Landing Burn Precise".
 		}
-		//No need to change burn calculation variables since they already account for the single engine thats running
-		SET singleEngineBurn TO now - singleEngineStart.
-		SET neededForce TO GetForce(burnTime - singleEngineBurn).
+		SET neededForce TO GetForce(singleBurnTime - modeTime).
+		SET THROTTLE TO clamp(0.4, 1.0, neededForce / F * 1000.0).
 
 		IF TTImpact < 3 { GEAR ON. }
 		IF groundAlt < 2 OR SHIP:VERTICALSPEED > 0 { SET mode TO 11. }
@@ -430,7 +438,7 @@ until false {
 	SET lastMode TO mode.
 	IF printing {
 		CLEARSCREEN.
-		print "Time: " + fmt(now, 2).
+		print "Time: " + fmt(now, 2) + ", mode time: " + fmt(modeTime, 1).
 		print "Landing time T-" + fmt(TTImpact, 2).
 		print "Pressure " + fmt(obsPressure, 1).
 		print "Height " + fmt(groundAlt, 1) + " m".
@@ -447,8 +455,6 @@ until false {
 			} ELSE IF mode = 9 {
 				print "Single Burntime: " + fmt(burnTime, 2).
 				print "Single Finalheight: " + fmt(finalHeight, 1).
-			} ELSE IF mode = 10 {
-
 			}
 		}
 		print "".
