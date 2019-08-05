@@ -174,8 +174,6 @@ function fmt { parameter value, digits.
 SET lastSpeed TO V(0,0,0).
 SET lastSpeedTime TO MT.
 
-SET dragVec TO VECDRAW(V(6,0,0), V(0, 0, 0), RGB(1,1,1), "Drag", 1.0, true, 0.2).
-
 SET realAccel TO V(0,0,0).
 SET lastImpactTime TO 0.
 SET lastTime TO MT.
@@ -238,14 +236,6 @@ until false {
 	SET maxAccel TO SHIP:FACING:VECTOR * (SHIP:MAXTHRUST / SHIP:MASS) + gravityVec.
 	SET drag TO realAccel - estimatedAccel.
 	IF realAccel = V(0,0,0) { SET drag TO V(0,0,0). }
-	SET verticalDrag TO GetComponent(drag, radialVecSFS).
-
-	IF drag:MAG < 0.1 {
-		SET dragVec:SHOW TO false.
-	} ELSE {
-		SET dragVec:VEC TO verticalDrag * radialVecSFS:NORMALIZED.
-		SET dragVec:SHOW TO true.
-	}
 
 	SET TTImpactList TO QuadraticPos(0.5*(drag:MAG-gravityVec:MAG), SHIP:VERTICALSPEED, groundAlt).
 	IF TTImpactList:EMPTY { SET TTImpact TO 999999.9. }
@@ -258,13 +248,11 @@ until false {
 	SET G TO gravity.
 	SET F TO 1000.0 * GetPotentialThrust(GetFirstStageEngines()).//thrust of currently active engines (N)
 	SET FR TO NOMINAL_FUEL_FLOW * engineCount.//The rate at which fuel burns (kg/s)
-	SET M TO 1000.0 * SHIP:MASS.//THe ship's current mass (kg)
+	SET M TO 1000.0 * SHIP:MASS.//The ship's current mass (kg)
 
 	IF mode = 0 {
 //################################# STARTUP #################################
 		SET modeName TO "Startup".
-		RCS OFF.
-		LIGHTS OFF.
 		IF GetFirstStageEngines()[0]:IGNITION {
 			SET mode TO 1.
 		}
@@ -276,8 +264,9 @@ until false {
 			Stop().
 		}
 		IF newMode {
+			SAS OFF. LIGHTS OFF. RCS OFF.
 			SET steeringmanager:MAXSTOPPINGTIME TO 20.
-			SET steeringmanager:PITCHPID:KD TO 2.5.
+			SET steeringmanager:PITCHPID:KD TO 1.5.
 			SET steeringmanager:PITCHPID:KP TO steeringmanager:PITCHPID:KP * 1.5.
 			SET THROTTLE TO 1.0.//Make sure the engines are actually firing
 			SET modeName TO "Verify Thrust".
@@ -303,18 +292,17 @@ until false {
 		IF newMode {
 			STAGE.
 			SET modeName TO "Launch".
-			SAS OFF. LIGHTS OFF. RCS OFF.
 			SET warmupTime TO now - ingTime.
 			SET __START_TIME__ TO TIME:SECONDS.
 			SET lastSpeedTime TO 0.0.
 			SET logfile to archive:CREATE("flight.csv").
 			logfile:writeln("Time,Thrust,Altitude,Impact Time,Pressure, Drag").
 		}
-		IF MT > 140 {
+		IF MT > 150 {
 			SET mode TO 3.
 			SET THROTTLE to 0.
 		} ELSE {
-			SET pitch TO 120 - max((MT - 40) / 5, 0).
+			SET pitch TO 90 - max((MT - 140) / 3, 0).
 			SET STEERING TO HEADING(95, pitch).
 		}
 
@@ -325,7 +313,7 @@ until false {
 			SET modeName TO "Boostback Burn Prep".
 			RCS ON.
 		}
-		IF now - s > 60 OR VERTICALSPEED < 0.0 {
+		IF now - s > 5 OR VERTICALSPEED < 0.0 {
 			SET mode TO 4.
 			STAGE.
 		}
@@ -346,7 +334,7 @@ until false {
 			SET STEERING TO HEADING(0, 90).
 		} ELSE {
 			SET STEERING TO SRFRETROGRADE.
-			IF obsPressure > 100 { SET mode TO 6. }
+			IF obsPressure > 50 { SET mode TO 6. }
 		}
 	} ELSE IF mode = 6 {
 //################################# RE-ENTRY BURN #################################
@@ -356,7 +344,7 @@ until false {
 		}
 		SET STEERING TO SRFRETROGRADE.
 
-		IF obsPressure < 75 OR AIRSPEED < 350 { SET mode TO 7. }
+		IF obsPressure < 40 OR AIRSPEED < 350 { SET mode TO 7. }
 	} ELSE IF mode = 7 {
 //################################# LANDING BURN PREP #################################
 		IF newMode {
