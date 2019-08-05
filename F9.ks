@@ -12,7 +12,7 @@ LOCK radialVecSFS TO HEADING(0, 90):VECTOR:NORMALIZED.
 LOCK gravity TO (BODY:MU / (ALTITUDE + BODY:RADIUS) ^ 2).
 LOCK gravityVec TO -radialVecSFS * gravity.
 //Accounts for the height of the first stage + landing legs
-LOCK groundAlt TO SHIP:ALTITUDE - MAX(0, SHIP:GEOPOSITION:TERRAINHEIGHT) - 50.
+LOCK groundAlt TO SHIP:ALTITUDE - MAX(0, SHIP:GEOPOSITION:TERRAINHEIGHT) - 48.9.
 
 SET NOMINAL_FUEL_FLOW TO 236.92823.
 
@@ -140,6 +140,7 @@ function SelectEngines { local parameter count.
 }
 
 function Stop {
+	SET THROTTLE TO 0.0.
 	UNLOCK THROTTLE.
 	UNLOCK STEERING.
 	Notify("Program forcibly terminated").
@@ -157,11 +158,10 @@ function Y { parameter t.
 	return A - B + groundAlt.
 }
 
-//The equation that calculates height based off of burn time except solved for force needed
+//Returns the force in newtons needed by the engines to land on the ground in t seconds
 function GetForce { parameter t.
-	return (FR^2 *(G*t^2 - 2*t*VERTICALSPEED )) / (2*(-FR*t*LN(ABS(FR*t - M)) + M*LN(ABS(FR*t - M)) + FR*t * LN(M) + FR*t)).
+	return 1000.0 * SHIP:MASS * (-2*(groundAlt + VERTICALSPEED*t) / (t*t) + G).
 }
-
 
 function fmt { parameter value, digits.
 	SET pow TO 10^digits.
@@ -276,7 +276,6 @@ until false {
 			Stop().
 		}
 		IF newMode {
-			SelectEngines(3).
 			SET steeringmanager:MAXSTOPPINGTIME TO 20.
 			SET steeringmanager:PITCHPID:KD TO 2.5.
 			SET steeringmanager:PITCHPID:KP TO steeringmanager:PITCHPID:KP * 1.5.
@@ -311,12 +310,12 @@ until false {
 			SET logfile to archive:CREATE("flight.csv").
 			logfile:writeln("Time,Thrust,Altitude,Impact Time,Pressure, Drag").
 		}
-		IF MT > 55 {
+		IF MT > 140 {
 			SET mode TO 3.
 			SET THROTTLE to 0.
 		} ELSE {
-			SET pitch TO 90 - max((MT - 40) / 5, 0).
-			SET STEERING TO HEADING(155, pitch).
+			SET pitch TO 120 - max((MT - 40) / 5, 0).
+			SET STEERING TO HEADING(95, pitch).
 		}
 
 	} ELSE IF mode = 3 {
@@ -391,10 +390,6 @@ until false {
 			SET modeName TO "Landing Burn".
 		}
 
-		//No need to change burn calculation variables since they already account for the single engine thats running
-		SET neededForce TO GetForce(burnTime - modeTime).
-		SET THROTTLE TO clamp(0.4, 1.0, neededForce / F * 1000.0).
-
 		//Change variables to calculate what time we would need to start the single engine burn 
 		SET engineCount TO GetActiveEngineCount(GetFirstStageEngines()).
 		SET F TO 1000.0 * GetPotentialThrust(SHIP:PARTSTAGGED("1-5")).//thrust of currently active engines (N)
@@ -404,7 +399,6 @@ until false {
 		SET finalHeight TO Y(singleBurnTime).
 
 		SET STEERING TO SRFRETROGRADE.
-		IF TTImpact < 3 { GEAR ON. }
 		IF finalHeight > 0.0 { SET mode TO 10. }//The single engine burn will get us very close
 		
 	} ELSE IF mode = 10 {
@@ -414,11 +408,11 @@ until false {
 			SelectEngines(1).
 			SET modeName TO "Landing Burn Precise".
 		}
-		SET neededForce TO GetForce(singleBurnTime - modeTime).
-		SET THROTTLE TO clamp(0.4, 1.0, neededForce / F * 1000.0).
+		SET power TO GetForce(singleBurnTime - modeTime) / F.
+		SET THROTTLE TO power.
 
-		IF TTImpact < 3 { GEAR ON. }
-		IF groundAlt < 2 OR SHIP:VERTICALSPEED > 0 { SET mode TO 11. }
+		IF TTImpact < 2 { GEAR ON. }
+		IF SHIP:STATUS = "LANDED" OR SHIP:VERTICALSPEED > 0 { SET mode TO 11. }
 	} ELSE IF mode = 11 {
 //################################# SHUTDOWN #################################
 		IF newMode {
@@ -426,7 +420,7 @@ until false {
 			SET THROTTLE TO 0.0.
 			UNLOCK STEERING.
 			UNLOCK THROTTLE.
-			Notify("The booster has landed").
+			Notify("Shutdown").
 		}
 	} //modes
 //################################# GLOBAL CODE (RUNS EVERY LOOP) #################################
@@ -455,6 +449,8 @@ until false {
 			} ELSE IF mode = 9 {
 				print "Single Burntime: " + fmt(burnTime, 2).
 				print "Single Finalheight: " + fmt(finalHeight, 1).
+			} ELSE IF mode = 10 {
+				print "throttle: " + power.
 			}
 		}
 		print "".
