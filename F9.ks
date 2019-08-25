@@ -296,7 +296,7 @@ until false {
 			SET __START_TIME__ TO TIME:SECONDS.
 			SET lastSpeedTime TO 0.0.
 			SET logfile to archive:CREATE("flight.csv").
-			logfile:writeln("Time,Thrust,Altitude,Impact Time,Pressure, Drag").
+			logfile:writeln("Time,Thrust,Altitude,Impact Time,Pressure, Drag, Airspeed").
 		}
 		IF MT > 150 {
 			SET mode TO 3.
@@ -396,7 +396,7 @@ until false {
 			SelectEngines(1).
 			SET modeName TO "Landing Burn Precise".
 		}
-		SET power TO GetForce(singleBurnTime - modeTime) / F.
+		SET power TO GetForce(singleBurnTime - modeTime) / (F - 1000 * SHIP:MASS * gravity).
 		SET THROTTLE TO power.
 
 		IF TTImpact < 2 { GEAR ON. }
@@ -413,7 +413,7 @@ until false {
 	} //modes
 //################################# GLOBAL CODE (RUNS EVERY LOOP) #################################
 	IF DEFINED logfile {
-		logfile:writeln(now+","+totalThrust+","+groundAlt+", "+impactTime+", "+obsPressure+", "+drag:MAG).
+		logfile:writeln(now+","+totalThrust+","+groundAlt+", "+impactTime+", "+obsPressure+", "+drag:MAG+", "+AIRSPEED).
 	}
 
 	SET newMode TO lastMode <> mode.
